@@ -72,10 +72,10 @@ const Lifecycle = require('..');
   // run(app.pluginC.someOtherFunc.ready, () => app.pluginC.someOtherFunc(console.log));
   app.pluginC.someOtherFunc(console.log)
 
-//   app.pluginC.someOtherFunc(() => {
-//     console.log(null)
-//     app.pluginC.someOtherFunc(console.log)
-//   })
+  //   app.pluginC.someOtherFunc(() => {
+  //     console.log(null)
+  //     app.pluginC.someOtherFunc(console.log)
+  //   })
 
 //   run(ready, console.log)
 })()
