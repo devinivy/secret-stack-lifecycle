@@ -15,7 +15,7 @@ const Lifecycle = require('..');
 
       start(() => {
         const readyCb = cb(ready)
-        setTimeout(() => readyCb(new Error('d\'oh!')), 1000)
+        setTimeout(() => readyCb(), 1000)
       })
 
       return { ready }
@@ -69,10 +69,13 @@ const Lifecycle = require('..');
 
   // run(app.pluginA.ready, console.log);
   // run(app.pluginA.ready, console.log);
-  // app.pluginC.someOtherFunc(() => {
-  //   console.log(null)
-  //   app.pluginC.someOtherFunc(console.log)
-  // })
+  // run(app.pluginC.someOtherFunc.ready, () => app.pluginC.someOtherFunc(console.log));
+  app.pluginC.someOtherFunc(console.log)
 
-  run(ready, console.log)
+//   app.pluginC.someOtherFunc(() => {
+//     console.log(null)
+//     app.pluginC.someOtherFunc(console.log)
+//   })
+
+//   run(ready, console.log)
 })()
