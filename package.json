@@ -1,0 +1,22 @@
+{
+  "name": "secret-stack-lifecycle",
+  "version": "1.0.0",
+  "description": "",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "pull-cache": "0.0.0",
+    "pull-defer": "^0.2.3",
+    "pull-many": "^1.0.9",
+    "pull-tee": "^2.0.1",
+    "secret-stack": "^6.3.2"
+  },
+  "devDependencies": {
+    "standard": "^16.0.3",
+    "tape": "^5.2.0"
+  }
+}
