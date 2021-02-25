@@ -10,10 +10,10 @@ const Lifecycle = require('..');
   const pluginA = {
     name: 'plugin-a',
     init (api) {
-      const { start, readyable, cb } = Lifecycle(api)
+      const { setup, readyable, cb } = Lifecycle(api)
       const ready = readyable()
 
-      start(() => {
+      setup(() => {
         const readyCb = cb(ready)
         setTimeout(() => readyCb(), 1000)
       })
@@ -25,18 +25,16 @@ const Lifecycle = require('..');
   const pluginB = {
     name: 'plugin-b',
     init (api) {
-      const { readyable, start, wait, sync } = Lifecycle(api)
+      const { readyable, setup, dependOn, fn } = Lifecycle(api)
       const someFuncReady = readyable()
 
-      start(() => {
-        wait(api.pluginA.ready, someFuncReady)
-
-        // wait(someFuncReady, api.pluginA.ready);
+      setup(() => {
+        dependOn(someFuncReady, api.pluginA.ready)
       })
 
       return {
         ready: someFuncReady,
-        someFunc: sync(someFuncReady, () => 10)
+        someFunc: fn(someFuncReady, () => 10)
       }
     }
   }
@@ -44,17 +42,15 @@ const Lifecycle = require('..');
   const pluginC = {
     name: 'plugin-c',
     init (api) {
-      const { start, readyable, async, wait } = Lifecycle(api)
+      const { setup, readyable, asyncFn, dependOn } = Lifecycle(api)
       const someOtherFuncReady = readyable()
 
-      start(() => {
-        wait(api.pluginB.someFunc.ready, someOtherFuncReady)
+      setup(() => {
+        dependOn(someOtherFuncReady, api.pluginB.someFunc.ready)
       })
 
-      // run(someOtherFuncReady, console.log);
-
       return {
-        someOtherFunc: async(someOtherFuncReady, (cb) => cb(null, api.pluginB.someFunc()))
+        someOtherFunc: asyncFn(someOtherFuncReady, (cb) => cb(null, api.pluginB.someFunc()))
       }
     }
   }
@@ -65,17 +61,21 @@ const Lifecycle = require('..');
     .use(pluginC)
 
   const app = create()
-  const { run, ready } = Lifecycle(app)
 
+  app.pluginC.someOtherFunc(console.log)
+  app.pluginC.someOtherFunc(console.log)
+  app.pluginC.someOtherFunc(console.log)
+  app.pluginC.someOtherFunc(console.log)
+  setTimeout(() => app.pluginC.someOtherFunc(console.log), 500)
+  setTimeout(() => app.pluginC.someOtherFunc(console.log), 1500)
+
+  // const { run, ready } = Lifecycle(app)
   // run(app.pluginA.ready, console.log);
   // run(app.pluginA.ready, console.log);
   // run(app.pluginC.someOtherFunc.ready, () => app.pluginC.someOtherFunc(console.log));
-  app.pluginC.someOtherFunc(console.log)
-
   //   app.pluginC.someOtherFunc(() => {
   //     console.log(null)
   //     app.pluginC.someOtherFunc(console.log)
   //   })
-
-//   run(ready, console.log)
+  //   run(ready, console.log)
 })()
