@@ -9,8 +9,8 @@ const Lifecycle = require('..');
 
   const pluginA = {
     name: 'plugin-a',
-    init (api) {
-      const { setup, readyable, cb } = Lifecycle(api)
+    init (app) {
+      const { setup, readyable, cb } = Lifecycle(app)
       const ready = readyable()
 
       setup(() => {
@@ -24,12 +24,12 @@ const Lifecycle = require('..');
 
   const pluginB = {
     name: 'plugin-b',
-    init (api) {
-      const { readyable, setup, dependOn, fn } = Lifecycle(api)
+    init (app) {
+      const { readyable, setup, dependOn, fn } = Lifecycle(app)
       const someFuncReady = readyable()
 
       setup(() => {
-        dependOn(someFuncReady, api.pluginA.ready)
+        dependOn(someFuncReady, app.pluginA.ready)
       })
 
       return {
@@ -41,12 +41,12 @@ const Lifecycle = require('..');
 
   const pluginC = {
     name: 'plugin-c',
-    init (api) {
-      const { setup, teardown, readyable, unreadyable, asyncFn, dependOn, cb, ...lc } = Lifecycle(api)
+    init (app) {
+      const { setup, teardown, readyable, unreadyable, asyncFn, dependOn, cb, ...lc } = Lifecycle(app)
       const someOtherFuncReady = readyable()
 
       setup(() => {
-        dependOn(someOtherFuncReady, api.pluginB.someFunc.ready)
+        dependOn(someOtherFuncReady, app.pluginB.someFunc.ready)
       })
 
       const closing = unreadyable()
@@ -63,15 +63,15 @@ const Lifecycle = require('..');
       })
 
       return {
-        someOtherFunc: asyncFn(someOtherFuncReady, (cb) => cb(null, api.pluginB.someFunc()))
+        someOtherFunc: asyncFn(someOtherFuncReady, (cb) => cb(null, app.pluginB.someFunc()))
       }
     }
   }
 
   const pluginD = {
     name: 'plugin-d',
-    init (api) {
-      const { teardown, unreadyable, close, cb, dependOn } = Lifecycle(api)
+    init (app) {
+      const { teardown, unreadyable, close, cb, dependOn } = Lifecycle(app)
 
       const closing = unreadyable()
 
