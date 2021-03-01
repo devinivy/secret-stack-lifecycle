@@ -10,12 +10,13 @@ const Lifecycle = require('..');
   const pluginA = {
     name: 'plugin-a',
     init (app) {
-      const { setup, readyable, cb } = Lifecycle(app)
-      const ready = readyable()
+      const { setup, during, process, ...lc } = Lifecycle(app)
+      const ready = during(lc.ready)
 
       setup(() => {
-        const readyCb = cb(ready)
-        setTimeout(readyCb, 1000)
+        process(ready, (cb) => {
+          setTimeout(cb, 1000)
+        })
       })
 
       return { ready }
@@ -25,8 +26,8 @@ const Lifecycle = require('..');
   const pluginB = {
     name: 'plugin-b',
     init (app) {
-      const { readyable, setup, dependOn, fn } = Lifecycle(app)
-      const someFuncReady = readyable()
+      const { during, ready, setup, dependOn, fn } = Lifecycle(app)
+      const someFuncReady = during(ready)
 
       setup(() => {
         dependOn(someFuncReady, app.pluginA.ready)
@@ -42,24 +43,23 @@ const Lifecycle = require('..');
   const pluginC = {
     name: 'plugin-c',
     init (app) {
-      const { setup, teardown, readyable, unreadyable, asyncFn, dependOn, cb, ...lc } = Lifecycle(app)
-      const someOtherFuncReady = readyable()
+      const { setup, during, process, asyncFn, dependOn, ...lc } = Lifecycle(app)
+      const someOtherFuncReady = during(lc.ready)
 
       setup(() => {
         dependOn(someOtherFuncReady, app.pluginB.someFunc.ready)
       })
 
-      const closing = unreadyable()
-      // const closed = unreadyable()
+      const closing = during(lc.closing)
+      const closed = during(lc.closed)
 
-      teardown(() => {
-        const closingCb = cb(closing)
-        // const closedCb = cb(closed)
-        dependOn(lc.close, closing)
-
-        // dependOn(closing, lc.close)
-        setTimeout(() => console.log('closingCb') || closingCb(), 400)
-        // setTimeout(() => console.log('closedCb') || closedCb(), 800)
+      setup(() => {
+        process(closing, (cb) => {
+          setTimeout(() => console.log('closingCb') || cb(), 400)
+        })
+        process(closed, (cb) => {
+          setTimeout(() => console.log('closedCb') || cb(), 800)
+        })
       })
 
       return {
@@ -71,17 +71,39 @@ const Lifecycle = require('..');
   const pluginD = {
     name: 'plugin-d',
     init (app) {
-      const { teardown, unreadyable, close, cb, dependOn } = Lifecycle(app)
+      const { setup, during, process, dependOn, ...lc } = Lifecycle(app)
 
-      const closing = unreadyable()
+      const closing = during(lc.closing)
 
-      teardown(() => {
-        const closingCb = cb(closing)
-        dependOn(close, closing)
-        setTimeout(closingCb, 2000)
+      setup(() => {
+        process(closing, (cb) => {
+          setTimeout(cb, 2000)
+        })
       })
 
       return {}
+    }
+  }
+
+  const pluginE = {
+    name: 'plugin-e',
+    init (app) {
+      const { during, ...lc } = Lifecycle(app)
+
+      const someFuncReady = during(lc.ready)
+      const someFuncClosed = during(lc.closed)
+
+      const database = db();
+
+      setup(() => {
+        process(someFuncReady, database.setup)
+        process(someFuncClosed, database.end)
+      })
+
+      return {
+        ready: someFuncReady,
+        someFunc: fn(someFuncReady, () => 10)
+      }
     }
   }
 
@@ -92,14 +114,19 @@ const Lifecycle = require('..');
     .use(pluginD)
 
   const app = create()
-  const { run, ready, close } = Lifecycle(app)
+  const { run, ready, closed } = Lifecycle(app)
 
   run(ready, () => {
     console.log('ready')
     app.close((err) => console.log('vanilla close', err))
   })
 
-  run(close, (err) => console.log('full close', err))
+  run(closed, (err) => {
+    console.log('full close', err)
+    setTimeout(() => {
+      run(closed, (err) => console.log('full close', err))
+    }, 200)
+  })
 
   // app.pluginC.someOtherFunc(console.log)
   // app.pluginC.someOtherFunc(console.log)
