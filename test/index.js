@@ -10,11 +10,11 @@ const Lifecycle = require('..');
   const pluginA = {
     name: 'plugin-a',
     init (app) {
-      const { setup, during, process, ...lc } = Lifecycle(app)
+      const { setup, during, handle, ...lc } = Lifecycle(app)
       const ready = during(lc.ready)
 
       setup(() => {
-        process(ready, (cb) => {
+        handle(ready, (cb) => {
           setTimeout(cb, 1000)
         })
       })
@@ -43,7 +43,7 @@ const Lifecycle = require('..');
   const pluginC = {
     name: 'plugin-c',
     init (app) {
-      const { setup, during, process, asyncFn, dependOn, ...lc } = Lifecycle(app)
+      const { setup, during, handle, asyncFn, dependOn, ...lc } = Lifecycle(app)
       const someOtherFuncReady = during(lc.ready)
 
       setup(() => {
@@ -54,10 +54,10 @@ const Lifecycle = require('..');
       const closed = during(lc.closed)
 
       setup(() => {
-        process(closing, (cb) => {
+        handle(closing, (cb) => {
           setTimeout(() => console.log('closingCb') || cb(), 400)
         })
-        process(closed, (cb) => {
+        handle(closed, (cb) => {
           setTimeout(() => console.log('closedCb') || cb(), 800)
         })
       })
@@ -71,12 +71,12 @@ const Lifecycle = require('..');
   const pluginD = {
     name: 'plugin-d',
     init (app) {
-      const { setup, during, process, dependOn, ...lc } = Lifecycle(app)
+      const { setup, during, handle, dependOn, ...lc } = Lifecycle(app)
 
       const closing = during(lc.closing)
 
       setup(() => {
-        process(closing, (cb) => {
+        handle(closing, (cb) => {
           setTimeout(cb, 2000)
         })
       })
@@ -96,8 +96,8 @@ const Lifecycle = require('..');
       const database = db();
 
       setup(() => {
-        process(someFuncReady, database.setup)
-        process(someFuncClosed, database.end)
+        handle(someFuncReady, database.setup)
+        handle(someFuncClosed, database.end)
       })
 
       return {
