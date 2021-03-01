@@ -73,37 +73,20 @@ const Lifecycle = require('..');
     init (app) {
       const { setup, during, handle, dependOn, ...lc } = Lifecycle(app)
 
-      const closing = during(lc.closing)
-
       setup(() => {
-        handle(closing, (cb) => {
-          setTimeout(cb, 2000)
+        handle(lc.closing, (cb) => {
+          setTimeout(() => {
+            console.log('closing plugin d')
+            cb()
+          }, 3000)
+        })
+        handle(lc.closed, (cb) => {
+          console.log('closed plugin d')
+          cb()
         })
       })
 
       return {}
-    }
-  }
-
-  const pluginE = {
-    name: 'plugin-e',
-    init (app) {
-      const { during, ...lc } = Lifecycle(app)
-
-      const someFuncReady = during(lc.ready)
-      const someFuncClosed = during(lc.closed)
-
-      const database = db();
-
-      setup(() => {
-        handle(someFuncReady, database.setup)
-        handle(someFuncClosed, database.end)
-      })
-
-      return {
-        ready: someFuncReady,
-        someFunc: fn(someFuncReady, () => 10)
-      }
     }
   }
 
