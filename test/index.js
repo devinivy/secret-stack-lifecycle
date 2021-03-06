@@ -2,31 +2,29 @@
 
 const crypto = require('crypto')
 const SecretStack = require('secret-stack')
-const Lifecycle = require('..');
+const { lifecycle, withLifecycle } = require('..');
 
 (() => {
   const hash = (s) => crypto.createHash('sha256').update(s).digest()
 
-  const pluginA = {
+  const pluginA = withLifecycle({
     name: 'plugin-a',
     init (app) {
-      const { setup, during, handle, ...lc } = Lifecycle(app)
+      const { setup, during, handle, ...lc } = app.lifecycle
       const ready = during(lc.ready)
 
-      setup(() => {
-        handle(ready, (cb) => {
-          setTimeout(cb, 1000)
-        })
+      handle(ready, (cb) => {
+        setTimeout(cb, 1000)
       })
 
       return { ready }
     }
-  }
+  })
 
-  const pluginB = {
+  const pluginB = withLifecycle({
     name: 'plugin-b',
     init (app) {
-      const { during, ready, setup, dependOn, fn } = Lifecycle(app)
+      const { during, ready, setup, dependOn, fn } = app.lifecycle
       const someFuncReady = during(ready)
 
       setup(() => {
@@ -38,16 +36,16 @@ const Lifecycle = require('..');
         someFunc: fn(someFuncReady, () => 10)
       }
     }
-  }
+  })
 
-  const pluginC = {
+  const pluginC = withLifecycle({
     name: 'plugin-c',
     init (app) {
-      const { setup, during, handle, asyncFn, dependOn, ...lc } = Lifecycle(app)
+      const { setup, during, handle, asyncFn, dependOn, ...lc } = app.lifecycle
       const someOtherFuncReady = during(lc.ready)
 
       setup(() => {
-        dependOn(someOtherFuncReady, app.pluginB.someFunc.ready)
+        dependOn(someOtherFuncReady, app.pluginB.someFuncReady)
       })
 
       const closing = during(lc.closing)
@@ -66,12 +64,12 @@ const Lifecycle = require('..');
         someOtherFunc: asyncFn(someOtherFuncReady, (cb) => cb(null, app.pluginB.someFunc()))
       }
     }
-  }
+  })
 
-  const pluginD = {
+  const pluginD = withLifecycle({
     name: 'plugin-d',
     init (app) {
-      const { setup, during, handle, dependOn, ...lc } = Lifecycle(app)
+      const { setup, during, handle, dependOn, ...lc } = app.lifecycle
 
       setup(() => {
         handle(lc.closing, (cb) => {
@@ -88,7 +86,7 @@ const Lifecycle = require('..');
 
       return {}
     }
-  }
+  })
 
   const create = SecretStack({ appKey: hash('secret-stack-lifecycle-testing') })
     .use(pluginA)
@@ -97,7 +95,7 @@ const Lifecycle = require('..');
     .use(pluginD)
 
   const app = create()
-  const { run, ready, closed } = Lifecycle(app)
+  const { run, ready, closed } = lifecycle(app)
 
   run(ready, () => {
     console.log('ready')
@@ -118,9 +116,10 @@ const Lifecycle = require('..');
   // setTimeout(() => app.pluginC.someOtherFunc(console.log), 500)
   // setTimeout(() => app.pluginC.someOtherFunc(console.log), 1500)
   // run(listening, () => console.log('listening'));
-  // run(app.pluginA.ready, console.log);
-  // run(app.pluginA.ready, console.log);
-  // run(app.pluginC.someOtherFunc.ready, () => app.pluginC.someOtherFunc(console.log));
+  // run(app.pluginA.ready, console.log)
+  // run(app.pluginA.ready, console.log)
+  app.pluginC.someOtherFunc(console.log)
+  run(app.pluginC.someOtherFuncReady, () => app.pluginC.someOtherFunc(console.log))
   //   app.pluginC.someOtherFunc(() => {
   //     console.log(null)
   //     app.pluginC.someOtherFunc(console.log)
