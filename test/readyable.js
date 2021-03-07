@@ -47,6 +47,23 @@ test('readyable caches its result, delayed run.', (t) => {
   setTimeout(readyable.run, 10)
 })
 
+test('readyable run() pulls readyables.', (t) => {
+  t.plan(3)
+  const readyable = createReadyable()
+  readyable.handle((cb) => {
+    setTimeout(cb, 10)
+  }).run()
+  run(readyable, (err) => {
+    t.error(err)
+    run(readyable, (err) => {
+      t.error(err)
+    })
+  })
+  run(readyable, (err) => {
+    t.error(err)
+  })
+})
+
 test('readyable processes handlers in parallel once run.', (t) => {
   const readyable = createReadyable()
   const handlers = []
@@ -237,7 +254,8 @@ test('readyable during() with dependOn false.', (t) => {
   t.deepEquals(handlers, ['readyableB-start', 'readyableA-start'])
 })
 
-test('readyable cb() as a one-off dependency.', (t) => {
+test('readyable cb() as a one-off dependency, success.', (t) => {
+  t.plan(6)
   const readyable = createReadyable()
   const readyableCb = cb(readyable)
   const handlers = []
@@ -256,9 +274,64 @@ test('readyable cb() as a one-off dependency.', (t) => {
   pull(readyable, pull.onEnd((err) => {
     t.error(err)
     t.deepEquals(handlers, ['readyable-start', 'readyable-end'])
-    t.end()
   }))
   t.deepEquals(handlers, [])
   readyable.run()
   t.deepEquals(handlers, [])
+})
+
+test('readyable cb() as a one-off dependency, error.', (t) => {
+  t.plan(6)
+  const readyable = createReadyable()
+  const readyableCb = cb(readyable)
+  const handlers = []
+  setTimeout(() => {
+    t.deepEquals(handlers, [])
+    readyableCb(new Error())
+    t.deepEquals(handlers, [])
+  }, 15)
+  readyable.handle((cb) => {
+    handlers.push('readyable-start')
+    setTimeout(() => {
+      handlers.push('readyable-end')
+      cb()
+    }, 5)
+  })
+  pull(readyable, pull.onEnd((err) => {
+    t.ok(err)
+    t.deepEquals(handlers, [])
+  }))
+  t.deepEquals(handlers, [])
+  readyable.run()
+  t.deepEquals(handlers, [])
+})
+
+test('readyable isReady() indicates not-ready, ready.', (t) => {
+  t.plan(5)
+  const readyable = createReadyable()
+  t.equal(readyable.isReady(), false)
+  readyable.handle((cb) => {
+    t.equal(readyable.isReady(), false)
+    setTimeout(cb, 10)
+  }).run()
+  run(readyable, (err) => {
+    t.error(err)
+    t.equal(readyable.isReady(), true)
+  })
+  t.equal(readyable.isReady(), false)
+})
+
+test('readyable isReady() indicates not-ready, errored.', (t) => {
+  t.plan(5)
+  const readyable = createReadyable()
+  t.equal(readyable.isReady(), false)
+  readyable.handle((cb) => {
+    t.equal(readyable.isReady(), false)
+    setTimeout(() => cb(new Error()), 10)
+  }).run()
+  run(readyable, (err) => {
+    t.ok(err)
+    t.equal(readyable.isReady(), null)
+  })
+  t.equal(readyable.isReady(), false)
 })
