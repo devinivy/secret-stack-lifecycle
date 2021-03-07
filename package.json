@@ -4,7 +4,7 @@
   "description": "",
   "main": "lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "nyc tape test/*.js && standard"
   },
   "author": "",
   "license": "ISC",
@@ -14,6 +14,7 @@
     "pull-many": "^1.0.9"
   },
   "devDependencies": {
+    "nyc": "^15.1.0",
     "secret-stack": "^6.3.2",
     "standard": "^16.0.3",
     "tape": "^5.2.0"
