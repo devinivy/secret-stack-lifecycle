@@ -4,7 +4,8 @@
   "description": "provides a lifecycle to secret-stack using readyables",
   "main": "lib/index.js",
   "scripts": {
-    "test": "nyc tape test/*.js && standard"
+    "test": "nyc tape test/*.js && standard",
+    "coverage": "nyc report --reporter=text-lcov | coveralls"
   },
   "author": "Devin Ivy <devin@bigroomstudios.com>",
   "license": "MIT",
@@ -14,6 +15,7 @@
     "pull-many": "^1.0.9"
   },
   "devDependencies": {
+    "coveralls": "^3.1.0",
     "nyc": "^15.1.0",
     "secret-stack": "^6.3.2",
     "standard": "^16.0.3",

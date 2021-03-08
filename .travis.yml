@@ -1,0 +1,13 @@
+language: node_js
+
+node_js:
+  - "12"
+  - "14"
+  - "node"
+
+jobs:
+  fast_finish: true
+  allow_failures:
+    - node_js: "node"
+
+after_script: "npm run coveralls"
