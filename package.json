@@ -1,6 +1,6 @@
 {
   "name": "secret-stack-lifecycle",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "provides a lifecycle to secret-stack using readyables",
   "main": "lib/index.js",
   "scripts": {
