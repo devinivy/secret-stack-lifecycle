@@ -1,13 +1,13 @@
 {
   "name": "secret-stack-lifecycle",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.0.0",
+  "description": "provides a lifecycle to secret-stack using readyables",
   "main": "lib/index.js",
   "scripts": {
     "test": "nyc tape test/*.js && standard"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Devin Ivy <devin@bigroomstudios.com>",
+  "license": "MIT",
   "dependencies": {
     "pull-cache": "0.0.0",
     "pull-defer": "^0.2.3",
@@ -17,6 +17,6 @@
     "nyc": "^15.1.0",
     "secret-stack": "^6.3.2",
     "standard": "^16.0.3",
-    "tape": "^5.2.0"
+    "tape": "^5.2.2"
   }
 }
