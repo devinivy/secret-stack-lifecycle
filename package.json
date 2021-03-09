@@ -9,10 +9,21 @@
   },
   "author": "Devin Ivy <devin@bigroomstudios.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devinivy/pull-readyable.git"
+  },
+  "keywords": [
+    "ssb",
+    "scuttlebutt",
+    "secret-stack",
+    "lifecycle",
+    "dependency",
+    "framework",
+    "readyable"
+  ],
   "dependencies": {
-    "pull-cache": "0.0.0",
-    "pull-defer": "^0.2.3",
-    "pull-many": "^1.0.9"
+    "pull-readyable": "^0.1.0"
   },
   "devDependencies": {
     "coveralls": "^3.1.0",

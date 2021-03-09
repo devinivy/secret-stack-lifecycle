@@ -3,8 +3,8 @@
 const crypto = require('crypto')
 const test = require('tape')
 const SecretStack = require('secret-stack')
+const { createReadyable } = require('pull-readyable')
 const { lifecycle, withLifecycle } = require('..')
-const { createReadyable } = require('../lib/readyable')
 
 test('lifecycle tracks listening, ready, closing, and closed', (t) => {
   t.plan(13)
@@ -204,7 +204,7 @@ test('lifecycle dependOn()', (t) => {
         dependOn(ready, dependency)
         setTimeout(() => {
           calls.push('dependency-run')
-          dependency.run()
+          dependency.go()
         }, 10)
         return {}
       }
