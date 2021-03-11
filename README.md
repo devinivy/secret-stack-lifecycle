@@ -13,7 +13,7 @@ While [secret-stack](https://github.com/ssb-js/secret-stack) does provide a way 
 
 The purpose of secret-stack-lifecycle is to provide an application lifecycle and a means for plugins to flexibly organize around each other.  It manages all the state that comes along with that, and deemphasizes the importance of plugin registration order.
 
-The lifecycle consists of `listening`, `ready`, `closing`, and `close`.  These always occur in order, barring errors that may occur along the way, which stops the lifecycle.  Each lifecycle step takes the form of a [readyable](https://github.com/devinivy/pull-readyable), which allows it to be extended and branched off into plugin-defined lifecycle steps that may happen during any point in the application's lifeycle.  Plugins can become very granular with this— for example, a specific function provided by a plugin may have its own setup and teardown, and other plugins can become aware of this and organize around it.  One upside is that it becomes safe to use a function provided by a plugin before the entire application is ready.  Asynchronous functions provided by plugins can even be called before they are ready, and they will wait to become ready before running.
+The lifecycle consists of `listening`, `ready`, `closing`, and `close`.  These always occur in order, barring errors that may occur along the way, which stops the lifecycle.  Each lifecycle step takes the form of a [readyable](https://github.com/devinivy/pull-readyable), which allows it to be extended and branched off into plugin-defined lifecycle steps that may happen during any point in the application's lifeycle.  Plugins can become very granular with this— for example, a specific function provided by a plugin may have its own setup and teardown, and other plugins can be aware of this and organize around it.  One upside is that it becomes safe to use a function provided by a plugin before the entire application is ready.  Asynchronous functions provided by plugins can even be called before they are ready, and they will wait to become ready before running.
 
 There's more than that, though!  Please check out the example and API documentation below to get started.  The library itself is also relatively short, and the tests are comprehensive in showing many different situations and usages.
 
@@ -39,7 +39,7 @@ const mathPlugin = withLifecycle({
     })
 
     return {
-      // Other plugins can use the `app.math.addReady` readyable
+      // Other plugins can use the app.math.addReady readyable
       // to check if this function is ready to be used, and a
       // means to wait until it is ready.
       add: fn(addReady, (x) => {
@@ -68,17 +68,17 @@ run(app.lifecycle.ready, (err) => {
 ## API
 
 ### `lifecycle(app)`
-Given a secret-stack appliction `app`, this returns a [lifecycle object](#applifecycle).  This may be called on the same `app` many times, and you'll always receive the exact same lifecycle object.  Note that this does not decorate `app.lifecycle` onto `app`, although `withLifecycle()` does.
+Given a secret-stack application `app`, returns a [lifecycle object](#applifecycle).  This may be called on the same `app` many times, and you'll always receive the exact same lifecycle object.  Note that this does not decorate `app.lifecycle` onto `app`, although `withLifecycle()` does.
 
 ### `withLifecycle(plugin)`
-Given a secret-stack `plugin`, this ensures that the plugin's `init(app, options)` is always passed an application with the `app.lifecycle` lifecycle object defined.  Additionally, this ensures that each function provided by the plugin that has been wrapped using [`fn()`](#fnreadyable-func) or [`asyncFn()`](#asyncfnreadyable-func) has a corresponding readyable (name suffixed with -`Ready`) for other plugins to interoperate with.  For example:
+Given a secret-stack `plugin`, ensures that the plugin's `init(app, options)` is always passed an application with the `app.lifecycle` [lifecycle object](#applifecycle) defined.  Additionally, this ensures that each function provided by the plugin that has been wrapped using [`fn()`](#fnreadyable-func) or [`asyncFn()`](#asyncfnreadyable-func) has a corresponding readyable (name suffixed with -`Ready`) for other plugins to interoperate with.  For example:
 ```js
 const mathPlugin = withLifecycle({
   name: 'math',
   init (app) {
     const { fn, listening } = app.lifecycle
     return {
-      // Other plugins can use the `app.math.addReady` readyable
+      // Other plugins can use the app.math.addReady readyable
       // to check if this function is ready to be used, and a
       // means to wait until it is ready.
       add: fn(listening, (a, b) => {
@@ -91,7 +91,7 @@ const mathPlugin = withLifecycle({
 ```
 
 ### `app.lifecycle`
-A lifecycle object for a secret-stack application `app` provided using `withLifecycle(plugin)` or `lifecycle(app)`.  This object contains the following:
+A lifecycle object for a secret-stack application `app` provided using `withLifecycle(plugin)` or by `lifecycle(app)`.  This object contains the following:
 
 #### `listening`
 A [readyable](https://github.com/devinivy/pull-readyable#createreadyable) that begins before [setup](#setupcb) and relies on `app`'s `'multiserver:listening'` event to fire to complete.
@@ -128,10 +128,10 @@ Returns a new function wrapping `func` that will throw if it is called before `r
 Returns a new function wrapping callback-receiving `func` that will wait for `readyable` to become ready before continuing processing.  You may also pass a stream or array of streams for `readyable`, and they will be rolled into a single readyable which waits for all of them to complete.
 
 #### `during(readyable, [{ dependOn }])`
-Returns a new readyable that is automatically run when `readyable` begins. When `dependOn` is `true`, which is the default, this new readyable is also marked as a dependency of `readyable`.  See also the [pull-readyable docs](https://github.com/devinivy/pull-readyable#readyableduring-dependon-).
+Returns a new readyable that is automatically started when `readyable` begins. When `dependOn` is `true`, which is the default, this new readyable is also marked as a dependency of `readyable`.  See also the [pull-readyable docs](https://github.com/devinivy/pull-readyable#readyableduring-dependon-).
 
-#### `dependOn(readyable, stream)`
-Sets `stream` as a dependency of `readyable` (i.e. a lifecycle step such as [`ready`](#ready)): it will not run its handlers or complete until `stream` ends.  You may also pass an array of streams and they will be combined.  Returns `readyable`.  See also the [pull-readyable docs](https://github.com/devinivy/pull-readyable#readyabledependonstream).
+#### `dependOn(readyable, dependency)`
+Sets readyable `dependency` as a dependency of `readyable` (i.e. a lifecycle step such as [`ready`](#ready)): it will not run its handlers or complete until `dependency` ends.  You may also pass a stream or array of streams and they will be combined.  Returns `readyable`.  See also the [pull-readyable docs](https://github.com/devinivy/pull-readyable#readyabledependonstream).
 
 #### `handle(readyable, cb)`
 Sets callback `cb` as a handler of `readyable` (i.e. a lifecycle step such as [`ready`](#ready)): it will not complete until `cb` is called.  The `cb` callback may be called with an error, which will be propagated to `readyable`.  Returns `readyable`.  See also the [pull-readyable docs](https://github.com/devinivy/pull-readyable#readyablehandlecb).
